@@ -1,0 +1,11 @@
+*.o
+automix
+build/
+lib/*/build/
+lib/*/*.a
+lib/*/*.so
+lib/vamp-plugin-sdk/libvamp-*.so
+lib/vamp-plugin-sdk/libvamp-*.a
+log/
+tmp/
+.vscode/settings.json

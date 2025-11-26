@@ -7,7 +7,7 @@ class recorder {
 private:
   AVFormatContext *m_format_ctx;
   AVCodecContext *m_codec_ctx;
-  AVCodec *m_codec;
+  const AVCodec *m_codec;
   AVStream *m_stream;
   mixer *m_source;
   int m_frame_size;

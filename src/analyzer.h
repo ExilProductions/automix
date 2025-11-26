@@ -1,8 +1,10 @@
 #include "track.h"
 #include "tune.h"
+#include <vamp-plugin-sdk/vamp-sdk/Plugin.h>
 #include <vamp-plugin-sdk/vamp-sdk/RealTime.h> // Would be nice to get rid of this
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 
 #ifndef analyzer_def

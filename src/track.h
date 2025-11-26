@@ -1,10 +1,11 @@
 #ifndef track_def
 
 #include <fstream>
-#include <ring_buffer.h>
+#include "ring_buffer.h"
 #include <vamp-plugin-sdk/vamp-sdk/Plugin.h>
 extern "C" {
 #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
 }
 
 class track {
@@ -13,7 +14,7 @@ private:
   ring_buffer m_ring_buffer;
   AVFormatContext *m_format_ctx;
   AVCodecContext *m_codec_ctx;
-  AVCodec *m_codec;
+  const AVCodec *m_codec;
   int m_audio_stream_index;
   int fill_output_buffer();
   void planar_to_interleaved(float **input_samples, float *output_samples,
