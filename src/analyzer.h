@@ -21,6 +21,7 @@ class analyzer {
 private:
   track m_track;
   double m_input_tempo;
+  std::string m_home_dir;
   double m_vol;
   std::ofstream m_analysis_log_file;
   std::vector<detector_helper> m_processes;
@@ -47,7 +48,7 @@ private:
   void get_mean_stddev(std::vector<int> input, double &mean, double &stddev);
 
 public:
-  analyzer(std::string track_path, double input_tempo);
+  analyzer(std::string track_path, double input_tempo, std::string home_dir);
   void open_log_file();
   int process();
   std::shared_ptr<tune> get_tune();

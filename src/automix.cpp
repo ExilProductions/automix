@@ -18,7 +18,7 @@ std::mutex tune_mutex;
 std::mutex path_mutex;
 
 void analyze_track(std::vector<std::shared_ptr<tune>> &tune_list,
-                   std::vector<std::string> &path_list, double input_tempo) {
+                   std::vector<std::string> &path_list, double input_tempo, std::string home_dir) {
   while (true) {
     path_mutex.lock();
     if (path_list.size() == 0) {
@@ -26,12 +26,15 @@ void analyze_track(std::vector<std::shared_ptr<tune>> &tune_list,
       return;
     }
 
-    analyzer wow = analyzer(path_list.back(), input_tempo);
+    std::string current_path = path_list.back();
     path_list.pop_back();
     path_mutex.unlock();
 
+    analyzer wow = analyzer(current_path, input_tempo, home_dir);
+
     if (wow.process() != 0) {
-      throw;
+      std::cerr << "Failed to analyze track: " << current_path << std::endl;
+      continue;
     }
 
     std::shared_ptr<tune> analysis_tune = wow.get_tune();
@@ -63,7 +66,7 @@ pugi::xml_node get_node_from_path(pugi::xml_document &doc,
 
 std::vector<std::shared_ptr<tune>>
 get_tunes(std::vector<std::string> track_paths, double input_tempo,
-          pugi::xml_document &doc, bool multithreaded, bool re_analyze) {
+          pugi::xml_document &doc, bool multithreaded, bool re_analyze, std::string home_dir) {
   int num_threads = std::thread::hardware_concurrency() - 1;
   std::vector<std::thread> thread_vector;
   std::vector<std::string> paths_to_analyze;
@@ -99,14 +102,14 @@ get_tunes(std::vector<std::string> track_paths, double input_tempo,
       for (int i = 0; i < num_threads; i++) {
         thread_vector.push_back(
             std::thread(analyze_track, std::ref(tunes_from_analysis),
-                        std::ref(paths_to_analyze), input_tempo));
+                        std::ref(paths_to_analyze), input_tempo, home_dir));
       }
       for (auto &t : thread_vector) {
         t.join();
       }
     } else {
       std::cout << "Using single thread for track analysis" << std::endl;
-      analyze_track(tunes_from_analysis, paths_to_analyze, input_tempo);
+      analyze_track(tunes_from_analysis, paths_to_analyze, input_tempo, home_dir);
     }
   }
 
@@ -159,34 +162,26 @@ std::vector<std::string> get_track_paths(std::string track_dir_path,
   return paths;
 }
 
-int check_environment_exists(bool &xml_file_exists, std::string &xml_file) {
+int setup_directories(const char* exe_path, bool &xml_file_exists, std::string &xml_file, std::string &home_dir) {
   const char *home_dir_var = std::getenv("AUTOMIX_HOME");
 
-  if (home_dir_var == nullptr) {
-    std::cerr << "Error environment variable AUTOMIX_HOME not set" << std::endl;
-    return 1;
+  if (home_dir_var != nullptr) {
+    home_dir = std::string(home_dir_var);
+  } else {
+    std::filesystem::path exe_abs = std::filesystem::absolute(std::filesystem::path(exe_path));
+    home_dir = exe_abs.parent_path().string();
   }
 
-  std::string home_dir(home_dir_var);
   std::string log_dir = home_dir + "/log";
   std::string tmp_dir = home_dir + "/tmp";
   xml_file = tmp_dir + "/automix.xml";
 
-  if (!std::filesystem::is_directory(std::filesystem::path(home_dir))) {
-    std::cerr << "Error " << home_dir << " is not an existing directory"
-              << std::endl;
-    return 1;
-  }
-
-  if (!std::filesystem::is_directory(std::filesystem::path(log_dir))) {
-    std::cerr << "Error " << log_dir << " is not an existing directory"
-              << std::endl;
-    return 1;
-  }
-
-  if (!std::filesystem::is_directory(std::filesystem::path(tmp_dir))) {
-    std::cerr << "Error " << tmp_dir << " is not an existing directory"
-              << std::endl;
+  // Create directories if not exist
+  try {
+    std::filesystem::create_directories(std::filesystem::path(log_dir));
+    std::filesystem::create_directories(std::filesystem::path(tmp_dir));
+  } catch (const std::filesystem::filesystem_error& e) {
+    std::cerr << "Error creating directories: " << e.what() << std::endl;
     return 1;
   }
 
@@ -351,8 +346,9 @@ int main(int argc, char **argv) {
   // check environment and inputs exist
   bool xml_file_exists;
   std::string xml_file;
+  std::string home_dir;
 
-  if (check_environment_exists(xml_file_exists, xml_file) != 0) {
+  if (setup_directories(argv[0], xml_file_exists, xml_file, home_dir) != 0) {
     return 1;
   }
 
@@ -388,7 +384,7 @@ int main(int argc, char **argv) {
       get_track_paths(input_dir_path, max_length);
 
   std::vector<std::shared_ptr<tune>> tune_list =
-      get_tunes(track_paths, input_tempo, doc, multithreaded, 0);
+      get_tunes(track_paths, input_tempo, doc, multithreaded, 0, home_dir);
 
   if (tune_list.size() == 0) {
     std::cerr << "Error could not find any tracks suitable for mixing"

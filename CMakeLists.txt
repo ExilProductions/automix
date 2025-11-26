@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 99)
 
 # Include directories
-include_directories(src lib lib/qm-dsp lib/vamp-plugin-sdk)
+include_directories(src lib lib/qm-dsp lib/vamp-plugin-sdk lib/pugixml/src)
 
 # Find FFmpeg
 find_package(PkgConfig REQUIRED)

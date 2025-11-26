@@ -12,8 +12,8 @@ constexpr size_t step_base = 512; // Fixed
 constexpr int step_div = 4;
 constexpr size_t step_size = step_base / step_div;
 
-analyzer::analyzer(std::string track_path, double input_tempo)
-    : m_track(track_path), m_input_tempo(input_tempo) {}
+analyzer::analyzer(std::string track_path, double input_tempo, std::string home_dir)
+    : m_track(track_path), m_input_tempo(input_tempo), m_home_dir(home_dir) {}
 
 std::shared_ptr<tune> analyzer::get_tune() {
   double tempo;
@@ -120,9 +120,9 @@ std::shared_ptr<tune> analyzer::construct_tune(const double tempo,
 
 void analyzer::open_log_file() {
   std::filesystem::path filesystem_path = m_track.get_path();
-  std::string log_path(std::getenv("AUTOMIX_HOME"));
+  std::string log_path(m_home_dir);
   log_path += "/log/";
-  log_path += filesystem_path.filename();
+  log_path += filesystem_path.filename().string();
   log_path += ".log";
   m_analysis_log_file.open(log_path.c_str());
   m_analysis_log_file << "Log file for " << m_track.get_path() << std::endl;
