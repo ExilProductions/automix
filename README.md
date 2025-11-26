@@ -34,7 +34,7 @@ These can easily be installed using a package manager, for example `apt`:
 Clone the project and it's submodules, then use make to build it:
 
 ``` bash
-> git clone https://github.com/walkywalker/automix --recurse-submodules
+> git clone https://github.com/ExilProductions/automix --recurse-submodules
 > cd automix
 > make
 ```
@@ -54,6 +54,7 @@ FFMPEG outputs information to STDERR, therefore it is usually most useful to for
 ## Authors
 
 * **[Matthew Walker](https://github.com/walkywalker)** (matthew@ncdconsulting.net) - *Initial work*
+* **[Simon Seider](https://github.com/ExilProductions)** (exil.productions.business@gmail.com) - *Cmake Build Support and General Fixes*
 
 ## Contributing
 
